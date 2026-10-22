@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jogos do Professor</title>
+<meta name="description" content="Jogos educativos do Prof. João Paulo Bernardes – CEUB">
+<style>
+  :root{
+    --bg:#f4f6f5; --card:#ffffff; --ink:#14201b; --muted:#5b6b64;
+    --accent:#0f7a5c; --accent-ink:#ffffff; --line:#dfe6e2;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1513; --card:#17201d; --ink:#e8efec; --muted:#9aaba4;
+      --accent:#3fc59a; --accent-ink:#06261b; --line:#26332e;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1513; --card:#17201d; --ink:#e8efec; --muted:#9aaba4;
+    --accent:#3fc59a; --accent-ink:#06261b; --line:#26332e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:560px;margin:0 auto;padding:32px 16px 48px}
+  .tag{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--accent)}
+  h1{font-size:28px;line-height:1.2;margin:6px 0 8px}
+  p.lead{color:var(--muted);margin:0 0 28px}
+  h2{font-size:15px;color:var(--muted);font-weight:600;margin:28px 0 10px}
+  ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+  a.game{display:flex;justify-content:space-between;align-items:center;gap:12px;
+    min-height:56px;padding:14px 16px;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;color:inherit;text-decoration:none}
+  a.game:active{transform:scale(.99)}
+  a.game span.meta{color:var(--muted);font-size:14px}
+  a.game::after{content:"→";color:var(--accent);font-weight:700}
+  .empty{padding:18px 16px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+  footer{margin-top:40px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">CEUB · Biomedicina e Enfermagem</span>
+  <h1>Jogos do Professor</h1>
+  <p class="lead">Escape rooms e casos clínicos para revisar o conteúdo das aulas pelo celular.</p>
+
+  <h2>Jogos disponíveis</h2>
+  <!-- LISTA-DE-JOGOS: cada jogo novo entra como <li><a class="game" href="disciplina/tema/"><div>Título<br><span class="meta">Disciplina · tempo</span></div></a></li> -->
+  <ul id="jogos">
+    <li class="empty">Nenhum jogo publicado ainda. Use o QR code mostrado em aula.</li>
+  </ul>
+
+  <footer>Prof. João Paulo Bernardes – CEUB</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#B42318">
+<title>Plantão na Farmácia</title>
+<meta name="description" content="Escape room de Farmacologia – fármacos do sistema cardiovascular">
+<style>
+:root{
+  --bg:#EDF2F4; --card:#FFFFFF; --ink:#16232F; --muted:#566876; --line:#CAD5DC;
+  --red:#B42318; --red-soft:#FBE9E7; --green:#0E7A52; --green-soft:#E3F4EC;
+  --amber:#8F5B00; --amber-soft:#FFF3D6; --focus:#1B5FAA;
+  --cond:"Avenir Next Condensed","Roboto Condensed","Arial Narrow","Helvetica Neue",system-ui,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D171F; --card:#15232D; --ink:#E3EBF0; --muted:#92A5B2; --line:#2A3C49;
+    --red:#F08479; --red-soft:#3A1E1D; --green:#53C390; --green-soft:#17352A;
+    --amber:#E5B55A; --amber-soft:#3A2E14; --focus:#7DB4F0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D171F; --card:#15232D; --ink:#E3EBF0; --muted:#92A5B2; --line:#2A3C49;
+  --red:#F08479; --red-soft:#3A1E1D; --green:#53C390; --green-soft:#17352A;
+  --amber:#E5B55A; --amber-soft:#3A2E14; --focus:#7DB4F0;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);overflow-x:hidden}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:480px;margin:0 auto;padding:0 16px}
+h1,h2{font-family:var(--cond);font-weight:700;letter-spacing:-.01em;line-height:1.1;margin:0}
+h1{font-size:40px}
+h2{font-size:28px}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+
+/* HUD: tira de monitor à beira do leito */
+.hud{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.hud .top{display:flex;align-items:center;gap:12px;padding-top:8px;padding-bottom:4px}
+.timer{font:700 28px/1 var(--cond);font-variant-numeric:tabular-nums;min-width:86px}
+.timer.late{color:var(--red)}
+.step{flex:1;font-size:14px;color:var(--muted);line-height:1.25}
+.step b{display:block;color:var(--ink);font-size:16px}
+.btn-hint{min-height:44px;padding:0 14px;border-radius:22px;border:1.5px solid var(--amber);background:var(--amber-soft);color:var(--amber);font-weight:600}
+.btn-hint:disabled{opacity:.45}
+.ecg{display:block;width:100%;height:26px}
+.ecg path{fill:none;stroke:var(--red);stroke-width:2;stroke-linejoin:round;stroke-dasharray:420;stroke-dashoffset:420;animation:beat 2.4s linear infinite}
+@keyframes beat{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion: reduce){.ecg path{animation:none;stroke-dashoffset:0}.shake{animation:none!important}}
+.slots{display:flex;gap:6px;padding:6px 0 10px}
+.slot{flex:1;height:34px;border-radius:6px;border:1.5px dashed var(--line);display:grid;place-items:center;font:700 20px var(--cond);color:var(--muted)}
+.slot.on{border-style:solid;border-color:var(--red);color:var(--red);background:var(--red-soft)}
+
+/* Ficha da gaveta */
+main{padding:20px 0 32px}
+.sheet{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--red);border-radius:4px 10px 10px 4px;padding:18px 16px 20px}
+.kicker{font-size:14px;color:var(--red);font-weight:600;margin-bottom:4px}
+.story{margin:12px 0}
+.prompt{font-weight:600;margin:14px 0 12px}
+table{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0 12px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:600}
+td.v{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.v.up::after{content:" ↑";color:var(--red)}
+td.v.down::after{content:" ↓";color:var(--red)}
+ul.meds{margin:4px 0 12px;padding-left:20px}
+ul.meds li{margin-bottom:6px}
+
+.choice{display:block;width:100%;text-align:left;min-height:52px;padding:12px 14px;margin:0 0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card)}
+.choice.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.choice .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--card);font-weight:700;font-size:14px;margin-right:8px}
+.choice.used{opacity:.55}
+.colhead{font-size:14px;color:var(--muted);margin:14px 0 8px}
+.pair-target{display:block;font-size:14px;color:var(--red);margin-top:4px}
+
+input.answer{width:100%;min-height:56px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);font-size:22px;font-weight:600;letter-spacing:.04em}
+.primary{display:block;width:100%;min-height:56px;margin-top:14px;border:0;border-radius:12px;background:var(--red);color:#fff;font-weight:700;font-size:18px}
+.primary:disabled{opacity:.4}
+.secondary{display:block;width:100%;min-height:48px;margin-top:10px;border:1.5px solid var(--line);border-radius:12px;background:transparent;font-weight:600}
+.msg{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:15px}
+.msg.err{background:var(--red-soft);color:var(--ink);border-left:4px solid var(--red)}
+.msg.hint{background:var(--amber-soft);border-left:4px solid var(--amber)}
+.msg.ok{background:var(--green-soft);border-left:4px solid var(--green)}
+.letter{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:8px;background:var(--red);color:#fff;font:700 26px var(--cond);margin-right:10px;vertical-align:middle}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* Início e fim */
+.intro{padding:28px 0 32px}
+.intro .tag{color:var(--red);font-weight:600;margin-bottom:8px}
+.rules{margin:16px 0;padding:0;list-style:none}
+.rules li{padding:10px 0;border-bottom:1px solid var(--line)}
+label.lbl{display:block;font-weight:600;margin:18px 0 6px}
+.code{font:700 40px/1.1 var(--cond);letter-spacing:.12em;text-align:center;padding:18px 8px;border:2px dashed var(--red);border-radius:12px;margin:12px 0;color:var(--red);word-break:break-all}
+dl.stats{display:grid;grid-template-columns:1fr auto;gap:8px 12px;margin:12px 0}
+dl.stats dt{color:var(--muted)} dl.stats dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+footer{padding:8px 0 28px;font-size:13px;color:var(--muted);line-height:1.6}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px;z-index:9}
+.modal .box{background:var(--card);border-radius:14px;padding:20px;max-width:420px;width:100%}
+</style>
+</head>
+<body>
+
+<header class="hud hidden" id="hud">
+  <div class="wrap top">
+    <div class="timer" id="timer" aria-live="off">25:00</div>
+    <div class="step" id="step"><b>Gaveta 1 de 7</b>sem dicas usadas</div>
+    <button class="btn-hint" id="btnHint" type="button">Dica</button>
+  </div>
+  <div class="wrap">
+    <svg class="ecg" viewBox="0 0 420 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 16 H60 l6 -4 6 4 H96 l4 4 6 -18 6 22 4 -4 H150 l8 -6 8 6 H230 l6 -4 6 4 H266 l4 4 6 -18 6 22 4 -4 H320 l8 -6 8 6 H420"/></svg>
+    <div class="slots" id="slots" aria-label="Letras coletadas"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="intro" id="intro">
+    <p class="tag">Escape room de Farmacologia</p>
+    <h1>Plantão na farmácia</h1>
+    <p class="story" style="margin-top:16px">Domingo, 19h40. A Sra. Marta Ribeiro, 64 anos, chega ao pronto-socorro com sangramento nasal que não para e manchas roxas nos braços. Ela tem fibrilação atrial, hipertensão e asma leve.</p>
+    <p>O sistema da farmácia travou e cada gaveta só abre com a resposta certa. Você tem <b>25 minutos</b> para destravar as gavetas e montar a conduta.</p>
+    <ul class="rules">
+      <li>São 7 gavetas, uma depois da outra.</li>
+      <li>Cada dica soma 1 minuto ao seu tempo final.</li>
+      <li>Errar não trava o jogo, mas os erros contam.</li>
+      <li>As gavetas 1 a 6 revelam uma letra. A última pede a palavra formada.</li>
+      <li>Se sair da página, seu progresso fica salvo neste celular.</li>
+    </ul>
+    <label class="lbl" for="name">Seu nome completo</label>
+    <input class="answer" id="name" autocomplete="name" placeholder="Nome e sobrenome" style="font-size:18px;letter-spacing:0">
+    <button class="primary" id="btnStart" type="button" disabled>Começar o plantão</button>
+    <p class="muted" style="margin-top:12px;font-size:14px">Use o mesmo nome que você vai enviar ao professor: o código final depende dele.</p>
+  </section>
+
+  <main id="game" class="hidden"></main>
+
+  <section id="end" class="hidden" style="padding:24px 0"></section>
+
+  <footer>Farmacologia, Aula 11: fármacos que atuam no sistema cardiovascular<br>Prof. João Paulo Bernardes – CEUB</footer>
+</div>
+
+<div class="modal hidden" id="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+const D = {"salt": "8d604421a23f6ad8", "iter": 20000, "secret": "8ace6673816407fd", "minutes": 25, "letters": 6, "game": "cardio-aula11", "locks": [{"type": "order", "title": "Entender o sangramento", "story": "Antes de mexer na medicação, a residente pede que você explique como o corpo interrompe um sangramento.", "prompt": "Toque nas etapas da hemostasia na ordem em que acontecem.", "hint": "A fibrinólise desfaz o coágulo, então não pode vir antes da coagulação. E o tampão de plaquetas se forma antes da rede de fibrina.", "feedback": "Reveja o slide 29 (Hemostasia): o vaso contrai, as plaquetas formam o tampão, a fibrina o reforça e só no fim o coágulo é dissolvido.", "cards": [{"id": "5e1b", "t": "Vasoconstrição"}, {"id": "ef32", "t": "Coagulação (formação da rede de fibrina)"}, {"id": "0e54", "t": "Fibrinólise"}, {"id": "ff0e", "t": "Adesão e agregação plaquetária"}, {"id": "706e", "t": "Lesão vascular"}], "parts": ["b0ef7201d93d5e8a1f7dc8d66ff179a8d97eedb4a9f6bf3e9102a9c3d3d6bee5", "7260cbd3435829c8f00faf7f33c3727810ef570ecfe8095d27e3a98cb5671ade", "5f637c209c77bbb038026ad7dc279e4666a0cf3c29a3e23f36f3d91787b25061", "021f6e45dedaeece8ca72e9df0d451a5e1834dcbad1e854cfa95ac58e74608ca", "7d10cb8baf4a90b8a0ffba14df6532a02453930f9d13864d12fef6260babb9d9"], "check": "f38875a24dbac52563da4d9a387bce9b0f4a8650c17dd31731f866f84f70741c", "secret": "cBKNGJ/cxe1suxjjIxB5hG8jlcATo0O0Ja5m0vXGygr50nN2EHC1qIoq+ZtcGvui4pAmFbhXVEp8/FAlnJNu2b6utDh2aHvWADTke+ttfj5lyJ8vYIqdSY19hC1/+qoEOJWUCNAwyDVcQYYkORsq5CqUmPwHxAGpScTDV5/T5NbmvnP1WFXmbbIKVYqBouEqViDvBYceE+fRC5seGBjxWLY=", "id": "g1"}, {"type": "text", "title": "Ler o laudo", "story": "O prontuário traz os exames de hoje e a lista de medicamentos em uso.", "prompt": "Digite o nome do medicamento que provavelmente elevou o INR.", "hint": "Procure o medicamento que entrou recentemente. O slide 44 lista fármacos que inibem o metabolismo da varfarina.", "feedback": "Ainda não. Veja o slide 44: alguns fármacos inibem o CYP450 e aumentam o efeito da varfarina. Qual deles ela começou a tomar há pouco tempo?", "report": [["Tempo de protrombina (TP)", "19 s", "11 a 14 s", "up"], ["INR", "3,8", "alvo 2 a 3", "up"], ["Hemoglobina", "11,6 g/dL", "12 a 16 g/dL (mulheres)", "down"], ["Plaquetas", "230.000/mm³", "150.000 a 450.000/mm³", ""]], "meds": ["Varfarina 5 mg/dia, há 1 ano (INR estável até o mês passado)", "Losartana 50 mg/dia, há 3 anos", "Fluconazol 150 mg, iniciado há 10 dias para candidíase", "Dieta sem mudanças nos últimos meses"], "inputmode": "text", "placeholder": "Nome do medicamento", "check": "324a2bdae7c9bf38bef8c3f2f97e223b74eb7c0d70667477793d2864d61ee6d2", "secret": "ikkpTUeKX6L909VU5rvDrFXMPxb3CLgfZzFWyYTbRzHV9+Krqg8s2+rCo5S5J8QOLfsEl3HZ2qbIpG2pFKkdhp0A3GAIEguoIbJaMkqZo/3DBeuhsRarVqBCkycvC88Vv5QSFGJ6BBjeiDxyLgfu0XAd/RXJUW84dKEIDOHtPpm4GfXpO17h8fC/2++Nxt3tUbKyq/cO03gxlWR5brYC/fDpLmomdnDE5wA/Sg6nzL22SAVZw2ADFGcmJgNMpA1VS9GlybdoZRTIDFdUIotxIZZHXbY3i1I=", "id": "g2"}, {"type": "text", "title": "Cofre da vitamina K", "story": "O cofre guarda a vitamina K, que ajuda a reverter o efeito da varfarina.", "prompt": "A senha é a soma dos números dos fatores de coagulação que a varfarina impede de serem carboxilados. Exemplo: fatores V e VIII dariam 5 + 8 = 13.", "hint": "São quatro fatores dependentes de vitamina K. Um deles é a protrombina (fator II).", "feedback": "Senha incorreta. Reveja o slide 43: a varfarina inibe a VKORC1 e reduz a carboxilação de quatro fatores.", "inputmode": "numeric", "placeholder": "Senha", "check": "dfab16c0fe00023456a939226e48923ff1b10c5f776ea6def3bae10c184212f7", "secret": "YeK5VTyO9F+wqpBfKyI7QjHpL2c4EER8MKw1O2sV+vTppDRVo1BewzIxFa6XsqghhpDG9rDEHYDJGgXTm8ZqXhhY5JhL5Jj+8hncUtTfo+MQ4Wo94t7Y1TRMbdSUeGDPLq1k5S30RBy3psM5Fhh2c8QY3XRBvoEW04frDpiumBfwEa3cEMiGgkmNiOQRtwQHkdzS8BZ4DlL5Aav9elnY7cl9QVo=", "id": "g3"}, {"type": "assoc", "title": "Armário de antitrombóticos", "story": "O armário foi bagunçado durante a reposição. Cada fármaco precisa voltar para a bandeja do seu alvo.", "prompt": "Toque num fármaco e depois no alvo correspondente.", "hint": "Os antiagregantes agem em alvos da plaqueta (COX-1, P2Y₁₂, GPIIb/IIIa). Os anticoagulantes agem na cascata ou na reciclagem da vitamina K.", "feedback": "Reveja os slides 34 a 36 (antiagregantes) e 41 a 43 (anticoagulantes).", "left": ["Aspirina (AAS)", "Clopidogrel", "Abciximab", "Dabigatrana", "Rivaroxabana", "Varfarina"], "right": [{"id": "1d78", "t": "Receptor GPIIb/IIIa"}, {"id": "33b5", "t": "COX-1 (inibição irreversível)"}, {"id": "6e25", "t": "Fator Xa"}, {"id": "a687", "t": "Trombina (fator IIa)"}, {"id": "93b8", "t": "VKORC1 (vitamina K epóxido redutase)"}, {"id": "0689", "t": "Receptor de ADP P2Y₁₂"}], "parts": ["03729940cd1d750cd06c0ab1c1cbec0e3989d35b107e2db008e8d556abdaa1ca", "3fcf8a07a75f942f7329c9ac3658937d8e4dbe1b2f8aeb0af7bd121f31b0547a", "622762fa3de39e1e5181dba4fa32bcb0f07019c500c942a43ca59f8c5f869650", "bfb281304459280b83118c107fa4bb3f99756b23819d12e5747454c074de3089", "54027ee007d07f6438e333ef686edb909a9f83c3a01051e92a914347d56a5edd", "a890ad33788d95ec38795b9a880ed4d4498fd8406de9104467bb0997ebc46a25"], "check": "0ceeaf7f2af3a206412f0527a049bdd8dd8873839019afb2814a175d4a488304", "secret": "V0gPzej+5Ztj7WOGyI/xGlYLfyL6MwX7XYz9jIeH8G8/OBteJRnumOIw/Du8/pWpab8JyU2jjho2gqHNHrVu/IM6OyrE7dwAfOIdVQxU3d9IZcvCR7sJcnPLdnnbjz7U2vBPOXgkc1w=", "id": "g4"}, {"type": "mc", "title": "O chiado", "story": "No mês passado, outro médico iniciou propranolol para controlar a frequência cardíaca da fibrilação atrial. Desde então ela tem crises de chiado e falta de ar. Ela tem asma leve. FC hoje: 82 bpm.", "prompt": "Qual é a melhor conduta para o betabloqueador?", "hint": "Ela tem asma: evite bloquear β2. E lembre o que acontece com os cardiosseletivos em doses altas.", "feedback": "Reveja os slides 10 e 11: o bloqueio β2 nos brônquios causa broncoconstrição, e os cardiosseletivos perdem a seletividade em doses altas.", "options": [{"id": "c536", "t": "Manter o propranolol e aumentar a dose, porque a FC ainda está acima de 60 bpm."}, {"id": "56db", "t": "Trocar por metoprolol, que bloqueia preferencialmente os receptores β1 do coração."}, {"id": "e478", "t": "Manter o propranolol, porque o bloqueio β2 causa broncodilatação."}, {"id": "6d33", "t": "Trocar por atenolol em dose bem alta, para garantir o controle da FC."}], "check": "83aedfb747f5a46a49bba4c446c3bdf5ea1d9c48968bf3242842e6bfcfb78c4f", "secret": "UHKFN5bMPldIMpPzrJ4JhFUYmBcf5XUKygE1/T0uwxRadjdMoqOO49oUIWjgeG8cN9z/F7BQB2jgDO/sQiw8WSif3gNdWF9AOzR6LJ+Z3WAPr15tkL42nrOVR5wMZMTZUe587OvGqQhCts0+ns3DMPm+i2hzQtgDfcmucAYU2XhO26/U8vGK", "id": "g5"}, {"type": "mc", "title": "O laudo do diurético", "story": "Há três semanas ela iniciou um diurético para a hipertensão. Os exames de seguimento chegaram.", "prompt": "Qual classe de diurético explica esse laudo?", "hint": "Olhe o cálcio. Qual classe aumenta a reabsorção de Ca²⁺?", "feedback": "Reveja os slides 17 a 19. A furosemida aumenta a excreção de cálcio e os poupadores elevam o potássio.", "report": [["Potássio", "3,1 mEq/L", "3,5 a 5,0 mEq/L", "down"], ["Cálcio", "10,9 mg/dL", "8,5 a 10,5 mg/dL", "up"], ["Glicemia de jejum", "118 mg/dL", "70 a 99 mg/dL", "up"], ["Ácido úrico", "7,4 mg/dL", "2,4 a 6,0 mg/dL", "up"]], "options": [{"id": "083f", "t": "Diurético de alça (furosemida)"}, {"id": "ad6f", "t": "Tiazídico"}, {"id": "7ffa", "t": "Poupador de potássio (espironolactona)"}, {"id": "c816", "t": "Bloqueador do canal de sódio (amilorida)"}], "check": "b84aefd1bda8fe3101948ab0164cc3757b41f912bc4c1d1c1bd60072d5c169d3", "secret": "JSJW6xcEQtmsgNU/ZWif2Gtq4lc3qnutSt4rIlKHkylOWq4U90V3VTuRuiB7fCbWRk9HGOLZ2/0lYy+f1xmE36Sefb/OOFMF+U8CKjMIV7AVZia1ipE96AmboGHvaR/BYNf7X/Jq4Pg3KYt3rCLgkIR2i/VfroX0pDuTnD16HPmJSxMWoG4m0qUf6XN93XmaF1aN3L+xhMkGHYmYRScvSQG+Cl0=", "id": "g6"}, {"type": "final", "title": "Porta de saída", "story": "A porta da farmácia pede a palavra formada pelas letras que você coletou.", "prompt": "É aquilo que todos os fármacos do armário tentam evitar.", "hint": "A palavra começa com T.", "feedback": "Palavra incorreta. Reorganize as letras coletadas.", "inputmode": "text", "placeholder": "Palavra", "check": "e95b6e2db7f6fdaef33a0e106f011ba310a5a1770d7f6aa17ff67e08ed97febc", "secret": "HiZ5TTf1vdse4kcCcEinDaRPPpGIIkYpAZGZze1WGxcg+GI7CX/4mM1zcCTWldgAdqoxknONxMxasEkmdrQhSatolctqrULnBZ/e3g1BUN/aT+4XvqHMOXRQQWP7V3M6q3FTdT4ShXIWIRpe963DPw0kK4pILjEHub39SdLAaQ5dBlX9M0FqudcUOVxIUzy3auMD+lC+ithcNhm0IQ4i6i7u8Iir7KcIqyapK4ejSBZ6Lwh8OEnGC9boA5vknDePVHVCGbLozxmLmdZVomhaC96BM9D7y7mypcvvKY/kuXk=", "id": "g7"}]};
+
+/* ---- SHA-256 (UTF-8) ---- */
+const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+const W=new Uint32Array(64), TE=new TextEncoder();
+function sha(str){
+  const m=TE.encode(str), l=m.length, n=((l+9+63)>>6)<<6, b=new Uint8Array(n);
+  b.set(m); b[l]=0x80; const bits=l*8; b[n-4]=bits>>>24; b[n-3]=bits>>>16; b[n-2]=bits>>>8; b[n-1]=bits; b[n-5]=Math.floor(bits/4294967296);
+  let h0=0x6a09e667,h1=0xbb67ae85,h2=0x3c6ef372,h3=0xa54ff53a,h4=0x510e527f,h5=0x9b05688c,h6=0x1f83d9ab,h7=0x5be0cd19;
+  for(let o=0;o<n;o+=64){
+    for(let i=0;i<16;i++)W[i]=(b[o+4*i]<<24)|(b[o+4*i+1]<<16)|(b[o+4*i+2]<<8)|b[o+4*i+3];
+    for(let i=16;i<64;i++){const x=W[i-15],y=W[i-2];
+      W[i]=(((x>>>7|x<<25)^(x>>>18|x<<14)^(x>>>3))+W[i-7]+((y>>>17|y<<15)^(y>>>19|y<<13)^(y>>>10))+W[i-16])|0;}
+    let a=h0,c=h1,d=h2,e=h3,f=h4,g=h5,h=h6,k=h7;
+    for(let i=0;i<64;i++){
+      const t1=(k+((f>>>6|f<<26)^(f>>>11|f<<21)^(f>>>25|f<<7))+((f&g)^(~f&h))+K[i]+W[i])|0;
+      const t2=(((a>>>2|a<<30)^(a>>>13|a<<19)^(a>>>22|a<<10))+((a&c)^(a&d)^(c&d)))|0;
+      k=h;h=g;g=f;f=(e+t1)|0;e=d;d=c;c=a;a=(t1+t2)|0;}
+    h0=(h0+a)|0;h1=(h1+c)|0;h2=(h2+d)|0;h3=(h3+e)|0;h4=(h4+f)|0;h5=(h5+g)|0;h6=(h6+h)|0;h7=(h7+k)|0;
+  }
+  return [h0,h1,h2,h3,h4,h5,h6,h7].map(v=>(v>>>0).toString(16).padStart(8,'0')).join('');
+}
+function norm(s){
+  s=String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  let t=s.trim().replace(/,/g,'.');
+  if(/^-?\d+(\.\d+)?$/.test(t)){ if(t.includes('.')) t=t.replace(/0+$/,'').replace(/\.$/,''); return t.replace(/^0+/,'')||'0'; }
+  return s.replace(/[^a-z0-9\-]/g,'');
+}
+function slow(lid,ans){ let h=sha(D.salt+lid+ans); for(let i=1;i<D.iter;i++) h=sha(h+D.salt); return h; }
+function dec(lid,ans,b64){
+  const key=sha(D.salt+'k'+lid+ans), raw=atob(b64), out=new Uint8Array(raw.length);
+  let i=0,c=0; while(i<raw.length){ const blk=sha(key+c); c++; for(let j=0;j<32&&i<raw.length;j++,i++) out[i]=raw.charCodeAt(i)^parseInt(blk.substr(j*2,2),16); }
+  return JSON.parse(new TextDecoder().decode(out));
+}
+
+/* ---- Estado ---- */
+const KEY='er-'+D.game;
+let S=null;
+function load(){ try{ const r=localStorage.getItem(KEY); if(r) S=JSON.parse(r);}catch(e){} }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const elapsed=()=> S.done ? S.doneAt : Math.floor((Date.now()-S.start)/1000);
+const hintsUsed=()=>Object.keys(S.hints).length;
+const fmt=t=>{const a=Math.abs(t);return (t<0?'+':'')+String(Math.floor(a/60)).padStart(2,'0')+':'+String(a%60).padStart(2,'0');};
+
+function tick(){
+  if(!S) return;
+  const left=D.minutes*60-elapsed();
+  $('timer').textContent=fmt(left);
+  $('timer').classList.toggle('late',left<0);
+  if(left<0 && !S.late && !S.done){ S.late=true; save(); showModal('<h2>Tempo esgotado</h2><p style="margin-top:10px">Os 25 minutos acabaram. Você pode continuar até o fim para revisar o conteúdo, mas o seu código vai indicar que terminou fora do tempo.</p><button class="primary" type="button" onclick="hideModal()">Continuar jogando</button>'); }
+}
+function showModal(h){ $('modalBox').innerHTML=h; $('modal').classList.remove('hidden'); }
+function hideModal(){ $('modal').classList.add('hidden'); }
+
+function renderHud(){
+  const n=D.locks.length, i=Math.min(S.idx,n-1);
+  $('step').innerHTML='<b>Gaveta '+(i+1)+' de '+n+'</b>'+(hintsUsed()? hintsUsed()+(hintsUsed()>1?' dicas':' dica')+' (+'+hintsUsed()+' min)':'sem dicas usadas');
+  let s=''; for(let j=0;j<D.letters;j++){ const L=S.letters[j]; s+='<div class="slot'+(L?' on':'')+'">'+(L?esc(L):'')+'</div>'; }
+  $('slots').innerHTML=s;
+  $('btnHint').disabled=!!S.hints[D.locks[i].id]||S.done||!!S.solvedView;
+}
+
+/* ---- Gaveta ---- */
+let sel=null, seq=[], pairs={}, activeLeft=null;
+function renderLock(){
+  const L=D.locks[S.idx]; sel=null; seq=[]; pairs={}; activeLeft=null; S.solvedView=false;
+  let h='<article class="sheet" id="sheet"><div class="kicker">Gaveta '+(S.idx+1)+'</div><h2>'+esc(L.title)+'</h2>';
+  h+='<p class="story">'+esc(L.story)+'</p>';
+  if(L.report){ h+='<table><thead><tr><th>Exame</th><th>Resultado</th><th>Referência</th></tr></thead><tbody>'+L.report.map(r=>'<tr><td>'+esc(r[0])+'</td><td class="v '+r[3]+'">'+esc(r[1])+'</td><td class="muted">'+esc(r[2])+'</td></tr>').join('')+'</tbody></table>'; }
+  if(L.meds){ h+='<p class="muted" style="margin:0">Em uso:</p><ul class="meds">'+L.meds.map(m=>'<li>'+esc(m)+'</li>').join('')+'</ul>'; }
+  if(L.type==='final'){ h+='<p>Letras coletadas: <b style="letter-spacing:.2em">'+esc(S.letters.join(' '))+'</b></p>'; }
+  h+='<p class="prompt">'+esc(L.prompt)+'</p><div id="area"></div>';
+  h+='<div id="hintBox">'+(S.hints[L.id]?'<div class="msg hint"><b>Dica:</b> '+esc(L.hint)+'</div>':'')+'</div><div id="fb"></div>';
+  h+='<button class="primary" id="btnGo" type="button" disabled>Abrir gaveta</button></article>';
+  $('game').innerHTML=h;
+  drawArea(); $('btnGo').onclick=submit; renderHud(); window.scrollTo(0,0);
+}
+function drawArea(){
+  const L=D.locks[S.idx], a=$('area'); let h='';
+  if(L.type==='text'||L.type==='final'){
+    h='<input class="answer" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="'+(L.inputmode==='numeric'?'numeric':'text')+'" placeholder="'+esc(L.placeholder||'')+'">';
+    a.innerHTML=h; const i=$('ans');
+    i.oninput=()=>{$('btnGo').disabled=!i.value.trim();};
+    i.onkeydown=e=>{if(e.key==='Enter'&&i.value.trim())submit();};
+    return;
+  }
+  if(L.type==='mc'){
+    h=L.options.map((o,k)=>'<button type="button" class="choice'+(sel===o.id?' sel':'')+'" data-id="'+o.id+'"><span class="n">'+'ABCD'[k]+'</span>'+esc(o.t)+'</button>').join('');
+    a.innerHTML=h; a.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{sel=b.dataset.id; drawArea(); $('btnGo').disabled=false;});
+    return;
+  }
+  if(L.type==='order'){
+    h='<p class="colhead">Etapas (toque para adicionar ou remover)</p>'+L.cards.map(c=>{const p=seq.indexOf(c.id);return '<button type="button" class="choice'+(p>=0?' sel':'')+'" data-id="'+c.id+'">'+(p>=0?'<span class="n">'+(p+1)+'</span>':'')+esc(c.t)+'</button>';}).join('');
+    h+=seq.length?'<button type="button" class="secondary" id="clr">Limpar sequência</button>':'';
+    a.innerHTML=h;
+    a.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{const id=b.dataset.id,p=seq.indexOf(id); if(p>=0) seq.splice(p,1); else seq.push(id); drawArea();});
+    if($('clr')) $('clr').onclick=()=>{seq=[];drawArea();};
+    $('btnGo').disabled=seq.length!==L.cards.length; return;
+  }
+  if(L.type==='assoc'){
+    const used=Object.values(pairs);
+    h='<p class="colhead">1. Escolha o fármaco</p>'+L.left.map((t,k)=>{const r=L.right.find(x=>x.id===pairs[k]);return '<button type="button" class="choice'+(activeLeft===k?' sel':'')+'" data-l="'+k+'"><b>'+esc(t)+'</b>'+(r?'<span class="pair-target">→ '+esc(r.t)+'</span>':'')+'</button>';}).join('');
+    h+='<p class="colhead">2. Toque no alvo'+(activeLeft!==null?' de <b>'+esc(L.left[activeLeft])+'</b>':'')+'</p>'+L.right.map(r=>'<button type="button" class="choice'+(used.includes(r.id)?' used':'')+'" data-r="'+r.id+'"'+(activeLeft===null?' disabled':'')+'>'+esc(r.t)+'</button>').join('');
+    a.innerHTML=h;
+    a.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{activeLeft=+b.dataset.l; drawArea(); const t=a.querySelector('.colhead:nth-of-type(2)'); });
+    a.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ if(activeLeft===null) return; const id=b.dataset.r;
+      for(const k in pairs) if(pairs[k]===id) delete pairs[k];
+      pairs[activeLeft]=id; const nx=L.left.findIndex((_,k)=>pairs[k]===undefined); activeLeft=nx>=0?nx:null; drawArea(); });
+    $('btnGo').disabled=Object.keys(pairs).length!==L.left.length; return;
+  }
+}
+function currentAnswer(){
+  const L=D.locks[S.idx];
+  if(L.type==='text'||L.type==='final') return norm($('ans').value);
+  if(L.type==='mc') return sel;
+  if(L.type==='order') return seq.join('-');
+  if(L.type==='assoc') return L.left.map((_,k)=>pairs[k]).join('-');
+}
+function submit(){
+  const L=D.locks[S.idx], ans=currentAnswer(); if(!ans) return;
+  const btn=$('btnGo'); btn.disabled=true; btn.textContent='Verificando…';
+  setTimeout(()=>{
+    const ok=slow(L.id,ans)===L.check;
+    btn.textContent='Abrir gaveta';
+    if(ok){ solved(L,ans); return; }
+    S.errors++; save();
+    let extra='';
+    if(L.parts){ const parts=ans.split('-'); let c=0; parts.forEach((p,k)=>{ if(sha(D.salt+L.id+'p'+k+':'+p)===L.parts[k]) c++; });
+      extra='<b>'+c+' de '+L.parts.length+(L.type==='order'?' na posição certa.':' corretas.')+'</b> '; }
+    $('fb').innerHTML='<div class="msg err">'+extra+esc(L.feedback)+'</div>';
+    const sh=$('sheet'); sh.classList.remove('shake'); void sh.offsetWidth; sh.classList.add('shake');
+    btn.disabled=false; $('fb').scrollIntoView({block:'nearest',behavior:'smooth'});
+  },30);
+}
+function solved(L,ans){
+  const r=dec(L.id,ans,L.secret);
+  S.answers[L.id]=ans; if(r.l) S.letters[S.idx]=r.l;
+  const last=S.idx===D.locks.length-1;
+  if(last){ S.done=true; S.doneAt=Math.floor((Date.now()-S.start)/1000); S.finalText=r.u; save(); finish(); return; }
+  S.idx++; save(); S.solvedView=true;
+  $('game').innerHTML='<article class="sheet" style="border-left-color:var(--green)"><div class="kicker" style="color:var(--green)">Gaveta '+S.idx+' aberta</div><h2>'+esc(L.title)+'</h2><div class="msg ok" style="margin-top:14px">'+(r.l?'<span class="letter">'+esc(r.l)+'</span>':'')+esc(r.u)+'</div><button class="primary" id="btnNext" type="button">Ir para a gaveta '+(S.idx+1)+'</button></article>';
+  $('btnNext').onclick=renderLock; renderHud(); window.scrollTo(0,0);
+}
+
+/* ---- Código de verificação ---- */
+const ALPH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function makeCode(name,t,hints,errs,late){
+  const nn=norm(name);
+  const p=(Math.min(t,4095)*512)+(Math.min(hints,7)*64)+(Math.min(errs,31)*2)+(late?1:0);
+  const mask=parseInt(sha(D.secret+'m'+nn).slice(0,6),16)%2097152;
+  const mac=parseInt(sha(D.secret+'c'+nn+':'+p).slice(0,5),16)%524288;
+  let v=(p^mask)*524288+mac, s='';
+  for(let i=0;i<8;i++){ s=ALPH[v%32]+s; v=Math.floor(v/32); }
+  return s;
+}
+function finish(){
+  $('game').classList.add('hidden'); $('hud').classList.add('hidden');
+  const hints=hintsUsed(), total=S.doneAt+hints*60, late=S.doneAt>D.minutes*60;
+  const code=makeCode(S.name,total,hints,S.errors,late);
+  $('end').innerHTML='<h1>'+(late?'Você saiu, fora do tempo':'Você escapou!')+'</h1>'+
+   '<p class="story">'+esc(S.finalText||'')+'</p>'+
+   '<dl class="stats"><dt>Nome</dt><dd>'+esc(S.name)+'</dd><dt>Tempo final (com dicas)</dt><dd>'+fmt(total)+'</dd><dt>Dicas usadas</dt><dd>'+hints+'</dd><dt>Erros</dt><dd>'+S.errors+'</dd></dl>'+
+   '<p style="margin-top:18px;font-weight:600">Seu código de verificação</p><div class="code" id="code">'+code+'</div>'+
+   '<p class="muted" style="font-size:14px">Envie ao professor o seu nome exatamente como digitou e este código. Uma foto desta tela também serve.</p>'+
+   '<button class="primary" type="button" id="btnCopy">Copiar nome e código</button>'+
+   '<button class="secondary" type="button" id="btnReset">Jogar de novo (apaga este resultado)</button>';
+  $('end').classList.remove('hidden'); window.scrollTo(0,0);
+  $('btnCopy').onclick=()=>{ const txt=S.name+';'+code;
+    const ok=()=>{$('btnCopy').textContent='Copiado';};
+    if(navigator.clipboard) navigator.clipboard.writeText(txt).then(ok,()=>prompt('Copie:',txt)); else prompt('Copie:',txt); };
+  $('btnReset').onclick=()=>{ showModal('<h2>Apagar resultado?</h2><p style="margin-top:10px">O código atual deixa de aparecer neste celular. Anote ou envie antes.</p><button class="primary" type="button" id="yes">Apagar e recomeçar</button><button class="secondary" type="button" onclick="hideModal()">Cancelar</button>');
+    $('yes').onclick=()=>{ try{localStorage.removeItem(KEY);}catch(e){} location.reload(); }; };
+}
+
+/* ---- Início ---- */
+$('name').oninput=()=>{ $('btnStart').disabled=$('name').value.trim().split(/\s+/).filter(Boolean).length<2; };
+$('btnStart').onclick=()=>{
+  S={name:$('name').value.trim().replace(/\s+/g,' '),start:Date.now(),idx:0,answers:{},letters:[],hints:{},errors:0,late:false,done:false};
+  save(); begin();
+};
+$('btnHint').onclick=()=>{
+  const L=D.locks[S.idx]; if(S.hints[L.id]) return;
+  showModal('<h2>Usar a dica?</h2><p style="margin-top:10px">A dica soma 1 minuto ao seu tempo final.</p><button class="primary" type="button" id="yesHint">Mostrar dica</button><button class="secondary" type="button" onclick="hideModal()">Agora não</button>');
+  $('yesHint').onclick=()=>{ S.hints[L.id]=1; save(); hideModal(); $('hintBox').innerHTML='<div class="msg hint"><b>Dica:</b> '+esc(L.hint)+'</div>'; renderHud(); };
+};
+function begin(){
+  $('intro').classList.add('hidden');
+  if(S.done){ finish(); return; }
+  $('hud').classList.remove('hidden'); $('game').classList.remove('hidden');
+  renderLock(); tick(); setInterval(tick,1000);
+}
+load(); if(S) begin();
+</script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F2A44">
+<title>Licença para abrir</title>
+<meta name="description" content="Escape room de Instrumentação Laboratorial e Biossegurança – Módulo II">
+<style>
+:root{
+  --paper:#E7ECE8; --sheet:#FBFCFA; --ink:#1F2A44; --muted:#59627A; --rule:#C3CCD0;
+  --hazard:#F2C230; --hazard-ink:#2A2410; --ok:#2F7D5B; --ok-soft:#DDEFE5; --no:#B8322A; --no-soft:#F8E1DE;
+  --hint-soft:#FFF3C9; --plan:#6B7A99; --focus:#2B59C3;
+  --serif:"Iowan Old Style","Charter","Bitstream Charter","Sitka Text",Cambria,Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A29; --sheet:#1D2538; --ink:#E6EAF2; --muted:#A1AAC0; --rule:#323C55;
+    --hazard:#F2C230; --hazard-ink:#2A2410; --ok:#5CC495; --ok-soft:#173528; --no:#F07A70; --no-soft:#3B1E1C;
+    --hint-soft:#3A3315; --plan:#8D9BBB; --focus:#8CB0FF;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A29; --sheet:#1D2538; --ink:#E6EAF2; --muted:#A1AAC0; --rule:#323C55;
+  --hazard:#F2C230; --hazard-ink:#2A2410; --ok:#5CC495; --ok-soft:#173528; --no:#F07A70; --no-soft:#3B1E1C;
+  --hint-soft:#3A3315; --plan:#8D9BBB; --focus:#8CB0FF;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans);overflow-x:hidden}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:480px;margin:0 auto;padding:0 16px}
+h1,h2{font-family:var(--serif);font-weight:700;margin:0;line-height:1.12}
+h1{font-size:42px;letter-spacing:-.015em}
+h2{font-size:25px}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+
+/* Planta baixa */
+.plan{display:block;width:100%;height:auto}
+.plan .wall{fill:none;stroke:var(--ink);stroke-width:2.2}
+.plan .room{stroke:var(--plan);stroke-width:1}
+.plan .room.now{fill:var(--sheet);stroke:var(--hazard);stroke-width:3}
+.plan .room.done{fill:var(--ok-soft);stroke:var(--ok);stroke-width:1.6}
+.plan .lbl{font:600 8.5px var(--sans);fill:var(--ink)}
+.plan .lbl.dim{fill:var(--muted)}
+.plan .let{font:700 20px var(--serif);fill:var(--ok)}
+.plan .door{stroke:var(--ink);stroke-width:1.4;fill:none}
+.plan .door.open{stroke:var(--ok);stroke-width:2.4}
+.plan .yard{fill:none;stroke:var(--plan);stroke-dasharray:3 3}
+
+/* HUD */
+.hud{position:sticky;top:0;z-index:5;background:var(--sheet);border-bottom:2px solid var(--ink)}
+.hud .top{display:flex;align-items:center;gap:12px;padding-top:8px;padding-bottom:6px}
+.timer{font:700 28px/1 var(--serif);font-variant-numeric:tabular-nums lining-nums;min-width:88px}
+.timer.late{color:var(--no)}
+.step{flex:1;font-size:14px;color:var(--muted);line-height:1.25}
+.step b{display:block;color:var(--ink);font-size:16px}
+.btn-hint{min-height:46px;padding:0 16px;border-radius:23px;border:2px solid var(--ink);background:var(--hazard);color:var(--hazard-ink);font-weight:700}
+.btn-hint:disabled{opacity:.4}
+.hud .plan{max-height:96px;margin:2px 0 8px}
+
+/* Ficha do roteiro */
+main{padding:18px 0 32px}
+.sheet{position:relative;background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:18px 16px 20px 22px;box-shadow:0 1px 0 var(--rule)}
+.sheet::before{content:"";position:absolute;left:10px;top:0;bottom:0;border-left:2px solid var(--no);opacity:.35}
+.item{font-size:14px;color:var(--muted);margin-bottom:6px}
+.story{margin:12px 0}
+.prompt{font-weight:650;margin:16px 0 12px}
+.state{font-weight:650}
+ol.stmts{list-style:none;margin:10px 0;padding:12px 14px;border:1px dashed var(--rule);border-radius:6px;background:var(--paper)}
+ol.stmts li{margin:0 0 10px}
+ol.stmts li:last-child{margin:0}
+ol.stmts li.mid{font-weight:700;text-align:center;margin:6px 0 10px}
+.tw{overflow-x:auto;margin:8px 0 12px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:600}
+td:first-child{font-weight:600}
+
+.choice{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;min-height:52px;padding:12px 14px;margin:0 0 10px;border:1.5px solid var(--rule);border-radius:6px;background:var(--sheet)}
+.choice:disabled{opacity:.5}
+.choice.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);background:var(--paper)}
+.choice .n{flex:none;display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:4px;border:1.5px solid var(--ink);font-weight:700;font-size:14px}
+.choice.sel .n{background:var(--ink);color:var(--sheet)}
+.choice.used{opacity:.55}
+.box{flex:none;width:26px;height:26px;border:2px solid var(--ink);border-radius:3px;display:grid;place-items:center;font-weight:800}
+.choice.sel .box{background:var(--no);border-color:var(--no);color:#fff}
+.colhead{font-size:14px;color:var(--muted);margin:16px 0 8px}
+.pair-target{display:block;font-size:14px;color:var(--muted);margin-top:4px;font-weight:600}
+
+input.answer{width:100%;min-height:56px;padding:12px 14px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);font-size:22px;font-weight:600;letter-spacing:.03em}
+.primary{display:block;width:100%;min-height:56px;margin-top:14px;border:0;border-radius:6px;background:var(--ink);color:var(--sheet);font-weight:700;font-size:18px}
+.primary:disabled{opacity:.35}
+.secondary{display:block;width:100%;min-height:48px;margin-top:10px;border:1.5px solid var(--rule);border-radius:6px;background:transparent;font-weight:600}
+.msg{margin-top:14px;padding:12px 14px;border-radius:4px;font-size:15px}
+.msg.err{background:var(--no-soft);border-left:4px solid var(--no)}
+.msg.hint{background:var(--hint-soft);border-left:4px solid var(--hazard)}
+.msg.ok{background:var(--ok-soft);border-left:4px solid var(--ok)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* Carimbo */
+.stamp{display:inline-flex;align-items:center;gap:12px;margin:14px 0 4px;padding:8px 14px;border:3px double var(--ok);color:var(--ok);border-radius:6px;transform:rotate(-6deg);font:700 22px var(--serif);animation:stamp .38s cubic-bezier(.2,1.6,.4,1) both}
+.stamp .l{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--ok);color:var(--sheet);font-size:24px}
+@keyframes stamp{from{transform:rotate(-6deg) scale(1.6);opacity:0}to{transform:rotate(-6deg) scale(1);opacity:1}}
+@media (prefers-reduced-motion: reduce){.stamp,.shake{animation:none!important}}
+
+/* Início e fim */
+.intro{padding:26px 0 30px}
+.intro .tag{color:var(--muted);font-weight:600;margin-bottom:10px}
+.intro .plan{margin:18px 0 6px}
+.caption{font-size:13px;color:var(--muted);margin-bottom:16px}
+.rules{margin:16px 0;padding:0;list-style:none;counter-reset:r}
+.rules li{padding:10px 0 10px 34px;border-bottom:1px solid var(--rule);position:relative}
+.rules li::before{counter-increment:r;content:counter(r);position:absolute;left:0;top:10px;width:24px;height:24px;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}
+label.lbl{display:block;font-weight:650;margin:18px 0 6px}
+.code{font:700 38px/1.1 var(--serif);letter-spacing:.12em;text-align:center;padding:18px 8px;border:3px double var(--ink);border-radius:6px;margin:12px 0;word-break:break-all;background:var(--sheet)}
+dl.stats{display:grid;grid-template-columns:1fr auto;gap:8px 12px;margin:12px 0}
+dl.stats dt{color:var(--muted)} dl.stats dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+footer{padding:8px 0 28px;font-size:13px;color:var(--muted);line-height:1.6}
+.modal{position:fixed;inset:0;background:rgba(10,14,24,.6);display:grid;place-items:center;padding:16px;z-index:9}
+.modal .mbox{background:var(--sheet);border-radius:6px;padding:20px;max-width:420px;width:100%;border-top:6px solid var(--hazard)}
+</style>
+</head>
+<body>
+
+<header class="hud hidden" id="hud">
+  <div class="wrap top">
+    <div class="timer" id="timer" aria-live="off">40:00</div>
+    <div class="step" id="step"><b>Área 1 de 7</b>sem dicas usadas</div>
+    <button class="btn-hint" id="btnHint" type="button">Dica</button>
+  </div>
+  <div class="wrap" id="hudPlan"></div>
+</header>
+
+<div class="wrap">
+  <section class="intro" id="intro">
+    <p class="tag">Escape room de Instrumentação Laboratorial e Biossegurança</p>
+    <h1>Licença para abrir</h1>
+    <div id="introPlan"></div>
+    <p class="caption">Planta do Laboratório Vita. As áreas com fita amarela ainda não foram vistoriadas.</p>
+    <p class="story">Segunda-feira, 7h20. O Laboratório Vita Análises Clínicas, em Taguatinga, quer abrir as portas na semana que vem, e você é o responsável técnico. A Dra. Helena Prado, fiscal da Vigilância Sanitária, chegou para a vistoria final.</p>
+    <p>Ela vai percorrer sete áreas com o roteiro de inspeção. Cada área só é aprovada com a resposta certa, e cada aprovação libera uma letra do carimbo da licença. Você tem <b>40 minutos</b>.</p>
+    <ul class="rules">
+      <li>São 7 áreas, uma depois da outra, e no fim o carimbo da licença.</li>
+      <li>Pesquise à vontade. Várias áreas pedem trechos da RDC 222/2018 e de outras normas que a aula cita. Prefira fontes oficiais: Anvisa, Diário Oficial, Ministério da Saúde.</li>
+      <li>Cada dica soma 1 minuto ao seu tempo final.</li>
+      <li>Errar não trava o jogo, mas os erros contam.</li>
+      <li>Se sair da página para pesquisar, seu progresso fica salvo neste celular.</li>
+    </ul>
+    <label class="lbl" for="name">Seu nome completo</label>
+    <input class="answer" id="name" autocomplete="name" placeholder="Nome e sobrenome" style="font-size:18px;letter-spacing:0">
+    <button class="primary" id="btnStart" type="button" disabled>Começar a vistoria</button>
+    <p class="muted" style="margin-top:12px;font-size:14px">Use o mesmo nome que você vai enviar ao professor: o código final depende dele.</p>
+  </section>
+
+  <main id="game" class="hidden"></main>
+
+  <section id="end" class="hidden" style="padding:24px 0"></section>
+
+  <footer>Instrumentação Laboratorial e Biossegurança, Módulo II: resíduos de serviços de saúde, desinfecção e esterilização, segurança, transporte de amostras e perfurocortantes<br>Prof. João Paulo Bernardes – CEUB</footer>
+</div>
+
+<div class="modal hidden" id="modal"><div class="mbox" id="modalBox"></div></div>
+
+<script>
+const D = {"salt": "19effba759d4b02b", "iter": 50000, "secret": "050968cf6935f896", "minutes": 40, "game": "inslab-licenca-v1", "locks": [{"id": "a1", "room": "recep", "type": "mc", "title": "Recepção: a pasta regulatória", "story": "A Dra. Helena abre a pasta regulatória. Grudado na capa há um post-it da sócia do laboratório com quatro anotações. A fiscal quer saber quais você, como responsável técnico, assina embaixo.", "prompt": "Quais anotações estão corretas segundo as normas em vigor?", "hint": "Procure o texto da RDC 222/2018 no site da Anvisa ou no Diário Oficial: os artigos 5º, 6º (parágrafo único) e 10 resolvem I, II e III. Para a IV, pesquise qual resolução da Anvisa sobre exames de análises clínicas está em vigor hoje.", "feedback": "O slide 3 de Gerenciamento de resíduos define o PGRSS, mas a responsabilidade pelo plano e o prazo de guarda dos documentos estão no texto da RDC 222/2018. E confira se a RDC 302/2005 ainda vale.", "list": ["I. Todo serviço gerador de resíduos de serviços de saúde precisa de um PGRSS, inclusive um laboratório pequeno que só faz coleta e exames de rotina.", "II. Como quem fiscaliza é a Vigilância Sanitária, cabe a ela elaborar e implantar o PGRSS do laboratório. O laboratório só precisa cumprir o plano.", "III. Os documentos que comprovam a capacitação e o treinamento dos trabalhadores, inclusive da equipe de limpeza terceirizada, devem ficar arquivados por no mínimo cinco anos, para fins de inspeção sanitária.", "IV. O roteiro de inspeção de hoje segue a RDC nº 302/2005, que continua sendo a norma da Anvisa sobre o funcionamento de laboratórios clínicos."], "options": [{"id": "ce86", "t": "I, II e III."}, {"id": "9d25", "t": "I e III, apenas."}, {"id": "896e", "t": "I, III e IV."}, {"id": "8ea1", "t": "II e IV, apenas."}, {"id": "e765", "t": "I e IV, apenas."}], "alts": [{"c": "f72376ee4a133907b4b2e014953c995f0983dc689c33e8621c208508c683cdfe", "s": "RxHqjEhIC870w7PQMxz3szEBJ6Nknq2YXJlZA8TaOtAGIVU6rVXnn6fj1sAOofQHFJh+dZNOc7SJu4c51CGJ64B/b0mH+jePJPX67+9KRWPSUEDminkUKRj2Q+GjSseZbvYft1vd413SFzhB8yIy5yZ8dkaVOIkjhR7P5RyPCtPyN5sgbhe1r7eWxZ/dnIqa9X2RgTleXWfd3eCxnx2IaB0vnjKEjIvQggzaEM8449fy/7lb/WXuLgZahksfHyHgTr8FywBqyLNZfX94w9p4vz9N/PCUSQXaQ7ibAmVPl4iVApCcyHikgv1FQvpvAL85myddLZaOkpTjZsSBUyiczY9Be62uU2ajd+XJmJFAY/aQIU1OPs/3GPVNVHCWOaIhy+de/5bnC8yX1qihKJJ/MGMxxhM4yopbKfatCmXK+uAUfrlE/vDZOX0V+xOOb2JFynnbCJ7HPcCkqUUsstHYdZnTUpe+/v/BBv5h4BzowjRB3lPxBlrrQHfJpGnHWJumhhLfrFwVtfayixmNkQeICf0="}]}, {"id": "a2", "room": "triag", "type": "assoc", "title": "Triagem: cinco descartes", "story": "No fim do primeiro dia de testes, cinco itens ficaram esperando descarte na sala de triagem. A fiscal pede que você diga para onde vai cada um.", "prompt": "Toque num item e depois no destino correto.", "hint": "Duas armadilhas. O slide 19 (Grupo E) lista objetos que muita gente jogaria no Grupo A. E o slide 11 separa culturas de micro-organismos (A1) das sobras de amostras sem risco 4 (slide 14).", "feedback": "Reveja os slides 11 a 19 e 25 de Gerenciamento de resíduos. O grupo depende do risco principal do resíduo, e não só de ele ter tocado em material biológico.", "left": ["Ponteira de micropipeta usada para pipetar soro", "Placa de Petri plástica com cultura de E. coli do controle de qualidade", "Tubo com sobra de urina de paciente ambulatorial, sem suspeita de agente de classe de risco 4", "Frasco vencido de HCl com o pictograma C no rótulo", "Gorro e máscara descartáveis da recepcionista, sem contato com material biológico"], "right": [{"id": "6b1a", "t": "Grupo B: recipiente rígido, compatível com o produto e identificado"}, {"id": "90aa", "t": "Grupo D: saco comum, conforme o serviço de limpeza urbana"}, {"id": "de06", "t": "Grupo A4: saco branco leitoso, sem tratamento prévio obrigatório"}, {"id": "d2ff", "t": "Grupo E: coletor rígido, trocado ao atingir 3/4 da capacidade"}, {"id": "cf22", "t": "Grupo A1: saco vermelho, com tratamento antes da destinação final"}], "parts": ["8f350f7bb253a6e569c348a7c4f67f0a361a9c3e272d75a31ab9e9f562ac9a4d", "dba62d0363d1a8141941c212d4acf1fb6c3ffbcee1441903a52b7097362e0947", "c3967d2ea7c9079dffcb09e2c1a8bfea346dec5c88901e6efcdbee3fac424e3f", "ffc055af6e16d9c7fabcb3fa713bed534edbc087a5a378deda29caf178a1c19f", "8afbd6f48b5ff73e32ce6c9e49e217cf25876a79f4b98f2d04c39827514016d6"], "alts": [{"c": "a06ef4e2ed8b639f5aa703aea38b679cf40f2924553d5ac213161a299c9e95fc", "s": "soJsvieRQ/65rGytkB+y7MMt2JoOhoE0s2w7V7SF7E6OWckAOc491xXvRFFrKdzD81/tBnEBrx855As9pZg+vd1ZRv+i/+jOs4vDEZwpZ32VDTnJhtvxk14vbcIqce9ZNXNMxZN6dUpgZ9vaiJZ3gFtIGyiytbIbHCwZdoyHOF2pV0N1bwUK03xCE1KLF8OUugd7GzT5Pl+BstSW26/PYwCg5NrlYb86uwmrhUjbo0yhw5OqHl/4amWSNFxdRcv1PzWak5ttGk2cKUVAZ1pIUiXVXbxUjtx23vI5wnUPTolse+k030MzX4sIYYLnbsOM/Uo1ZiuC0lalV2lbm6WYpchW7F9riRpRgp7j9f+O7clkiTcpvlK+C8kHcOQTPJpbb+Qng8fnf/Nz8lv0/PfCwq5Ml42I1bS6j0jfsMxv6yCeJJnX2Zqrmz6DRyMrmu8J3ujtOLuq01z95ZC4N1emEVkngp4oaPKhEylshM+kKnTnwnksgn56Rbby"}]}, {"id": "a3", "room": "bioq", "type": "text", "title": "Bioquímica: o tubo quebrado", "story": "Um tubo com sangue de um paciente HBsAg reagente caiu e quebrou na bancada. A técnica já recolheu os cacos com pinça para o coletor e removeu a matéria orgânica com papel absorvente. Agora ela vai desinfetar a superfície com hipoclorito de sódio.", "prompt": "Quantos mL de água sanitária ela deve usar para preparar 500 mL de hipoclorito na concentração que garante o nível de desinfecção necessário? O restante do volume é água.", "hint": "Primeiro descubra o nível: em qual nível de desinfecção o vírus da hepatite B sobrevive (aula Desinfecção e Esterilização, slides 13 e 14)? Depois veja, no slide 21 da aula \"Desinfecção e esterização\" (versão original do Módulo II), a concentração de hipoclorito desse nível e use C1 × V1 = C2 × V2.", "feedback": "Volume incorreto. O vírus da hepatite B sobrevive à desinfecção de baixo nível. Veja qual concentração de hipoclorito a aula coloca em cada nível e refaça a diluição (C1 × V1 = C2 × V2).", "table": {"head": ["Almoxarifado", "Concentração"], "rows": [["Água sanitária", "2,5% de cloro ativo"], ["Álcool etílico", "70%"], ["Quaternário de amônio", "pronto para uso"], ["Água destilada", "–"]]}, "placeholder": "Volume em mL", "inputmode": "numeric", "alts": [{"c": "049c4853e31f552e5487cbe6726ab822d9c953773c23f9028ca0def332a09926", "s": "EYelzujDCfSH0oPybfmqyGCZBPgEAR2aCMJn5FO9OsOBWdkjgJglul4ZkX7qijpF+rW0USVYVnWUihjuSE+BBQVgTYL1vulEhzkRoIL4ANtIDGVta4SB2ymO8UFvsLu0gwa/jNnOZv7aqtB+F5K/8BD7p/ZFiLFfoGdlMg++SQgGSE/uYlPflkXZJ1f7l9mL5orMoz7dgr1h9OxY7nJPDJqHw4G5fKrEw1S8M9IP5umWGRROlgKGqYg2Sf7RJeTr1P0on5lVxkuPl9LqNPr+EcZ8PcuW9N3MjvUsN1WYreh+8lX6Kjv/uPLSle+GjI/UBsNPOHZ2ZXQZ7iFKk64qItrIve9kFhCrvFX4sNYfe6MhUbvhRDroTbqXwzWny63r7PnWQ7XYxhQG6B6TX46ygGGUHMKzdzO9MarW"}, {"c": "66af1bf419a168eed972301f62342b9dd591dd5c3996865914c78ff2a67cfa27", "s": "qanuxh/Up3NrSIgm6pioUlvcqQgF3A1pp8FEcG5GCzNBi1xyIgxbZS0bodKQzoGjKQwU2PMH129iVjRJ+NaKGCXJOBVszJMVDpSXlnFUwx1abgjV8WbafqKRYdPodFjTC7GPsewdY+OWrO5fmcQocEkVIZLV5TRzmlj3U4SwAWQUIBXc/CAaTTjxxkCKDFO2c2D5abr/iXmCIE3KLwkFSOdZ6L9134sScfbdLXZidCG8ztzrmAUTr1/R7w9YDhD8UAxJQ8Q/GcdepeLtlzcb+CH7ryBXT/ouRnglL7/dNXrDGNanrZvIK7hhT90bxzbVSFLDo6ECzzinHwE7BmpFiaTK8xsEfzD3gnCAC7kgCGL4UzxutI1vbbLBzsfxNIgjrVMLuciTIXTxIeBlsioy+waW2aE7wWy9pN4k"}]}, {"id": "a4", "room": "ester", "type": "mc", "title": "Esterilização: a autoclave ocupada", "story": "A autoclave está no meio do ciclo de tratamento dos resíduos A1 do dia. A estagiária preparou 1 litro de caldo BHI (meio de cultura líquido, sem compostos termolábeis) para amanhã e, para não esperar, sugere usar a estufa.", "prompt": "A respeito dessas asserções, assinale a opção correta.", "hint": "Compare para que materiais a aula indica a estufa (slide 40) e a autoclave (slides 44 e 45). O que aconteceria com 1 litro de líquido a 170 °C por 2 horas?", "feedback": "Reveja os slides 40, 44 e 45 de Desinfecção e Esterilização: que tipo de material vai para a estufa, e qual método a aula indica para meios de cultura?", "list": ["I. Levar o caldo BHI à estufa a 170 °C por 2 horas é uma forma adequada de esterilizá-lo enquanto a autoclave está ocupada,", "PORQUE", "II. o calor seco esteriliza por oxidação e é indicado para vidros vazios, instrumentos, agulhas e seringas de vidro."], "options": [{"id": "5e6f", "t": "As asserções I e II são verdadeiras, e a II justifica a I."}, {"id": "eacd", "t": "As asserções I e II são verdadeiras, mas a II não justifica a I."}, {"id": "40b0", "t": "A asserção I é verdadeira, e a II é falsa."}, {"id": "1ec1", "t": "A asserção I é falsa, e a II é verdadeira."}, {"id": "c97b", "t": "As asserções I e II são falsas."}], "alts": [{"c": "e0ef64f77377ce3de05f420220d16bad056db2742ad9aa4c47352a78ec89ebd9", "s": "2ugT2cM77neXiWsPTOS5MNjMUb/Aytac6ahDIiZ2BAMeIkp9vmE9NE96Jl8cZa8u73ZVqvGhUohaVo2C0Lz3jepoO9Kt3s5PJKAKIEqhNL5paR9PIk2vGFfU0piUbn9C7OSoAAfaIZ9HxU97EFj33L44W3229w0pa0VWnCk5RqDXwdDLC2CJPrDRHP9EfE+4Br0l2M8xjkS/KwfGMGcViSS4aRHopwiZDTzF15pFYb1dOVMC69qKQlcSZYufBBLCNv9RL+ZFlp7ZDaxmguFGU8k2oMPTgUkZpiJr2Zc6Ymz10tzjCs1rjiXc/ubR2o9FvCNV3uJPegItRrZH3SW8rqfD/OI0tH8fvkq/fMTwcEHVZKqhO0UqG9ZCfy8U80ync/3ic1bysGXpFf9efmd4ZyTN2SM4MWv41CeI"}]}, {"id": "a5", "room": "exped", "type": "text", "title": "Expedição: remessa para o LACEN-DF", "story": "Cinco caixas estão prontas para seguir ao LACEN-DF. A remessa precisa obedecer às boas práticas de transporte de material biológico humano da Anvisa. A fiscal confere a guia de remessa e barra uma das caixas.", "prompt": "Digite o número UN que deveria estar na caixa barrada.", "hint": "Diferencie amostra de paciente de cultura (material em que o agente foi multiplicado). A lista indicativa de substâncias infecciosas da Categoria A, da OMS, faz essa distinção. Depois releia os slides 13 e 18 de Transporte de Amostra.", "feedback": "Releia as definições das Categorias A e B e das amostras isentas (slides 12 a 20 de Transporte de Amostra). Nem todo agente perigoso torna a amostra do paciente Categoria A.", "table": {"head": ["Caixa", "Material", "Identificação na caixa"], "rows": [["1", "Soro de paciente com suspeita de dengue, para sorologia IgM", "UN 3373, Substância biológica, Categoria B"], ["2", "Swab de nasofaringe de paciente com suspeita de influenza aviária A(H5N1)", "UN 3373, Substância biológica, Categoria B"], ["3", "Urina para teste toxicológico de drogas", "Amostra humana isenta"], ["4", "Cultura pura de Bacillus anthracis isolada de hemocultura, para confirmação", "UN 3373, Substância biológica, Categoria B"], ["5", "Sangue seco em papel-filtro (triagem neonatal)", "Amostra humana isenta"]]}, "placeholder": "Número UN", "inputmode": "numeric", "alts": [{"c": "d1cf19f164e3a1088e1eac496c171e13de2edde06c9bbb215560ce7947ee5dce", "s": "9RIwl74IH7ejBO+P6LbZhrMeGrMMCfWLIPvS4X10GzZrwr+gDFi4icImUaApaHQ2IID15uUnWhi4Ui6r2Bd2I6Tr8xdZDx0he4KIRaz4J/K4HK3Ze5mSuAR35ZQteyR4kbpkdxVWXG4Oy26YWoShQNVK5D4j4Tb6lJZ6wDs0H6YipfGC1/xcpQV+sKqzJCIZkc0cIp4JXmuNrJrVLcDfnHZ/zHygNFqyin5FlnA86DRHZr9NIzxdwHGnJ8I1ee10dZVOaTcnzx67Da98sqBTKltLgzy5EG8vwSRv7WOSY9THvuikufCZ9J0xmvz+pd5FdqNwIzLAxElR53zso+62WK8o3KXO4RB1pb6O+G+V0HAnB3RaxlNM6ZNVwEDANbHX7v3qAB03SQWc9WN8/V9bGEG/+lP9s6Lvd1M8yXei4IJHewzsmFGNUnuzc3SUq9S98yqCzGuVK3YXcJNCSo4478PoYOaRuvaIjiZqiXvXxH/E5yXBb4Z/HB+6J876DmEARsKy2dqJUkxK+H66OqUU5UvBY5yJN9CteMvravOQrVO2gJplTSL/Cw=="}, {"c": "242ffa7fabe0dd805d7a4e34bc6e0b22886684d3a26f266b2b89176de10dda7c", "s": "BgeKzi69GiP9n8t2vtVHiEXB/D2bSj62GeCPUbEGz93LxGGsU58b7BhYg3OUiS1ZNl2B54OTUWVhuX60E6AtCZBnijoasLdCpnNDOpJdANatWKpIRAGJDyXUm/b3pyILMUJXM8OeM4i1fMs1w0mZyqn/AQKDHzIhhBpBQsKQ55DHYSsHWy2R5NvWitIzOq4hecPWb+HeU5lV+a2LCVpwggJg8RPUB0XPX6BEY2eCIfUlKyaUWwOT/r1TDxBDuF3RUHQpVhBqrO76MNJLwxAiPEorAsbVQRKe8MNvZ04N06hzpH3Fb6FbBJIY1B5AbMlY7meWyhJdPrQ781GlXFXB+J2ZU80sHWJnR85x+I6DKjx8qOHdK974PuIpR4tU0nr0IUBFWPiNoPtPsF3HEclyc6FHWJswJnoiTjBuIwSZc68r6cc4oEKlDJ3b8LPZPd0KAdg2A1iYhZUwT1dwpw+0qjQY4IaYZJdHEUZG7VX0Np4UjGEdpVtNz0GwdzDmXlZ9VymUoValwmpMi0EIgLFXFKqsLNQDWPVqNK8Diq3ACZ+nF3iEWvb8Aw=="}]}, {"id": "a6", "room": "abrigo", "type": "multi", "title": "Abrigo externo de resíduos", "story": "No fundo do terreno fica o abrigo externo de resíduos, recém-construído pelo empreiteiro. A fiscal lê o memorial da obra e pede que você aponte o que vai virar exigência no relatório.", "prompt": "Toque em todos os itens que estão em desacordo com a RDC 222/2018 e com a aula. Depois confirme.", "hint": "São mais de dois itens. O slide 33 lista as características do abrigo externo, o slide 27 fala da identificação dos sacos, e os artigos 34 e 35 da RDC 222/2018 detalham os ambientes, a porta e a capacidade.", "feedback": "Confira cada item contra o slide 33 (acessibilidade, exclusividade, segurança, higiene), o slide 27 (identificação dos sacos) e os artigos 34 e 35 da RDC 222/2018.", "items": [{"id": "aad7", "t": "Um único ambiente guarda juntos os coletores dos Grupos A, E e D."}, {"id": "98d7", "t": "A porta abre para dentro, para não atrapalhar a passagem na calçada."}, {"id": "2d45", "t": "Piso e paredes revestidos de material liso, resistente, lavável e impermeável."}, {"id": "61f4", "t": "Aberturas de ventilação protegidas com tela contra insetos e roedores."}, {"id": "9a7e", "t": "Os sacos do Grupo A recebem, na hora do uso, uma etiqueta adesiva escrita \"RESÍDUO INFECTANTE\"."}, {"id": "b0ed", "t": "Canaleta de escoamento com ralo sifonado com tampa e ponto de água para lavar os coletores."}, {"id": "632b", "t": "Uma prateleira no abrigo guarda as resmas de papel e o carrinho de limpeza do escritório."}, {"id": "70e8", "t": "Capacidade para guardar os resíduos acumulados caso uma coleta regular deixe de acontecer."}], "alts": [{"c": "740104f775585ce1699e2be60573a56c50c5e66d6e96bfa2de5ccb6dcd451478", "s": "yJWO02j92zBFN8gmVk77G+CCB4u85ZUpLA+Q8N0tuCEfIADcfE91/ZfmziNPha+NUNo5ZllvcKFkJAsJ/WUgIvW/m42xX3Kye1MwHSNYtAjbsCcOfnMQSPHBfuWtHWDVPdoS4AALVdN6FM0xRTMrX0Df2f7NR/44a2+kiRrwLSPBKeuo5I7gM0ZPh1GEeg6TyHIzPihLgUG+RmndIEHN2pfFKUNN1zRFlWaL6+MAGmneAT0zKeS898KPWhmU90EdLSZJw4ZrcKhjj7Fv7s5nSDFk+BnJ8eO/X7v1Dw3qKHfkID6iIw6dG42vVRuILQ96PLsDt9d3drKZGwf9KwxTFd+nGj8I83y0nCTLD9iyy4u2q6O/iO/qDRITSxmCnntjCcw5PFaTSoouk6BokQzByvPk35pbS+vnj50U"}]}, {"id": "a7", "room": "coleta", "type": "order", "title": "Sala de coleta: a picada", "story": "Ao descartar uma lanceta, o auxiliar Diego furou o dedo. O paciente-fonte ainda está na recepção. A fiscal observa como o laboratório conduz o acidente.", "prompt": "Monte, na ordem certa, os 6 passos corretos. Três cartões são condutas erradas e devem ficar de fora.", "hint": "As condutas proibidas estão no slide 32 de Perfurocortantes. A PEP é urgência (slide 35), e a testagem de acompanhamento tem dois retornos (slide 34).", "feedback": "Reveja os slides 30 a 35 de Perfurocortantes: cuidados imediatos, o que não fazer, testagem e prazo da PEP.", "pick": 6, "cards": [{"id": "afcc", "t": "Cobrir o local com material estéril"}, {"id": "4ade", "t": "Espremer o dedo para fazer o sangue sair"}, {"id": "67f0", "t": "Teste rápido de HIV no profissional e no paciente-fonte, com consentimento"}, {"id": "1475", "t": "Repetir a testagem do profissional 90 dias após a exposição"}, {"id": "94ef", "t": "Iniciar a PEP, se indicada, o quanto antes e dentro de 72 horas"}, {"id": "7a4c", "t": "Esperar 72 horas para ver se aparecem sintomas antes de procurar atendimento"}, {"id": "47cd", "t": "Repetir a testagem do profissional 30 dias após a exposição"}, {"id": "96d2", "t": "Lavar o local com água e sabão em abundância"}, {"id": "21c5", "t": "Aplicar hipoclorito de sódio sobre o furo para desinfetar"}], "parts": ["939f73bd38c05624c209a4a2de0b4080f2bfd4cce926132fb4db9251df16cd27", "a8bf525764eb6f31f6e0b6c479fa9fbda675560567098d3f0a74e7144299a38f", "df185c6553557c879a0af6ba818b6c8567b96d8274b84fb86d64575de143093d", "0f4b981ee3f232109babb2ee2936d73eb688832e454eae2886eed55a1bb2ef22", "683986f61e2f5ad519703f37f3795c95060efce5b66c41d883ec2337e6d3fcd3", "865507b864dc763b3d4648fd6284886b16f9c40d1876469655e262b1bdf1630e"], "alts": [{"c": "cd87aaa299d1aa0e3c78e799329206ea816d3472f026815d05181b35c848229f", "s": "odTtN5W77E1MLYQQkKEupJ3/LMERIVuhmmzaAQ/67VJ8yhHbYSvXsuHxDjzG1rebaYGa+zWWlABvrDk3dC5HMDQSzogHN5xCKtNAIi5RMv+r5KUDZweerTxSjrF1Zk6cGqmoJsQsNCGFv1XAF9qkFeuUzsbwUWlCMgv5ReAfAnm4apsWjVUq7mrkSV7XeZNp5A4f4AKE8d8B9jOPgLOhUGF4NY8QW3wmnEppFS5tKCmFIE2aPGmUE9K4BHc2Xjk5YpIjUTPm5ZlRUx14cOrUH4IQKbBrnFS5h1s3Yv+CVv5lPPPDjMQA0CtIaKKDX1bVhBxY7qPXkg1f"}]}, {"id": "a8", "room": "porta", "type": "final", "title": "Porta principal: o carimbo", "story": "As sete áreas foram aprovadas. O carimbo da Licença Sanitária só destrava com a palavra formada pelas letras que você coletou, fora de ordem.", "prompt": "Reorganize as letras. É o que todo serviço de saúde gera todos os dias e que o PGRSS existe para controlar (no singular).", "hint": "Tem 7 letras e começa com R.", "feedback": "Palavra incorreta. Use as 7 letras coletadas.", "placeholder": "Palavra", "inputmode": "text", "alts": [{"c": "c056c13c92a60b3a0d384421ed4c96ab897344220cc056705fcec244c6bef83a", "s": "DpWm4wvM5JIEPFfyeguTmUVpxLsgRhfl//TvVd62u27QLKziFnoaA0F9hh+63Cp1x7whFr5R6ABikzYo0XLPUPiOvO/GiXcf/bIb4U2FY5Md40ZgNzZTu7NhG8SXqiWx6WNOjw2ffNVU6kLMPdpZQUXYWJjIZifV6A9mYNBkATrdCdB1pkamPJLv99ytuDb6G6bQzqbErlXCYq0m0yWrDfQjI7OO3IigqwYbF2d1+J3Qwt4/kI/Gl1K/WdY0fb5hndmHzR3jT/mDQeSks1BSGxertI7bSTSGk2es3ula0noVm2Za26EoPdX0mlnDAEbCEBppZARFHZW8fi2fPDvnFO4QH/1bJzcLe4MiqSr1vLObg2QcSUHgxrm910FO7hynYWblT0BdGUh3MWuBi2Jl"}]}]};
+
+/* ---- SHA-256 (UTF-8) ---- */
+const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+const W=new Uint32Array(64), TE=new TextEncoder();
+function sha(str){
+  const m=TE.encode(str), l=m.length, n=((l+9+63)>>6)<<6, b=new Uint8Array(n);
+  b.set(m); b[l]=0x80; const bits=l*8; b[n-4]=bits>>>24; b[n-3]=bits>>>16; b[n-2]=bits>>>8; b[n-1]=bits; b[n-5]=Math.floor(bits/4294967296);
+  let h0=0x6a09e667,h1=0xbb67ae85,h2=0x3c6ef372,h3=0xa54ff53a,h4=0x510e527f,h5=0x9b05688c,h6=0x1f83d9ab,h7=0x5be0cd19;
+  for(let o=0;o<n;o+=64){
+    for(let i=0;i<16;i++)W[i]=(b[o+4*i]<<24)|(b[o+4*i+1]<<16)|(b[o+4*i+2]<<8)|b[o+4*i+3];
+    for(let i=16;i<64;i++){const x=W[i-15],y=W[i-2];
+      W[i]=(((x>>>7|x<<25)^(x>>>18|x<<14)^(x>>>3))+W[i-7]+((y>>>17|y<<15)^(y>>>19|y<<13)^(y>>>10))+W[i-16])|0;}
+    let a=h0,c=h1,d=h2,e=h3,f=h4,g=h5,h=h6,k=h7;
+    for(let i=0;i<64;i++){
+      const t1=(k+((f>>>6|f<<26)^(f>>>11|f<<21)^(f>>>25|f<<7))+((f&g)^(~f&h))+K[i]+W[i])|0;
+      const t2=(((a>>>2|a<<30)^(a>>>13|a<<19)^(a>>>22|a<<10))+((a&c)^(a&d)^(c&d)))|0;
+      k=h;h=g;g=f;f=(e+t1)|0;e=d;d=c;c=a;a=(t1+t2)|0;}
+    h0=(h0+a)|0;h1=(h1+c)|0;h2=(h2+d)|0;h3=(h3+e)|0;h4=(h4+f)|0;h5=(h5+g)|0;h6=(h6+h)|0;h7=(h7+k)|0;
+  }
+  return [h0,h1,h2,h3,h4,h5,h6,h7].map(v=>(v>>>0).toString(16).padStart(8,'0')).join('');
+}
+function norm(s){
+  s=String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  let t=s.trim().replace(/,/g,'.').replace(/\s+/g,'');
+  if(/^-?\d+(\.\d+)?$/.test(t)){ if(t.includes('.')) t=t.replace(/0+$/,'').replace(/\.$/,''); return t.replace(/^0+(?=\d)/,''); }
+  return s.replace(/[^a-z0-9\-]/g,'');
+}
+function slow(lid,ans){ let h=sha(D.salt+lid+ans); for(let i=1;i<D.iter;i++) h=sha(h+D.salt); return h; }
+function dec(lid,ans,b64){
+  const key=sha(D.salt+'k'+lid+ans), raw=atob(b64), out=new Uint8Array(raw.length);
+  let i=0,c=0; while(i<raw.length){ const blk=sha(key+c); c++; for(let j=0;j<32&&i<raw.length;j++,i++) out[i]=raw.charCodeAt(i)^parseInt(blk.substr(j*2,2),16); }
+  return JSON.parse(new TextDecoder().decode(out));
+}
+
+/* ---- Planta ---- */
+const ROOMS={recep:[4,4,70,56,'Recepção'],coleta:[74,4,62,56,'Coleta'],triag:[136,4,64,56,'Triagem'],bioq:[200,4,66,56,'Bioquímica'],
+  ester:[4,60,86,56,'Esterilização'],exped:[90,60,92,56,'Expedição'],adm:[182,60,84,56,'Administração'],abrigo:[284,60,52,56,'Abrigo']};
+function planSVG(pid){
+  const state={};
+  D.locks.forEach((L,i)=>{ if(!S) state[L.room]='locked'; else if(S.answers[L.id]) state[L.room]='done'; else if(i===S.idx) state[L.room]='now'; else state[L.room]='locked'; });
+  const tid='tape-'+pid;
+  let h='<svg class="plan" viewBox="0 0 340 120" role="img" aria-label="Planta do laboratório com as áreas já vistoriadas"><defs><pattern id="'+tid+'" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="var(--sheet)"/><rect width="4" height="10" fill="var(--hazard)" opacity=".6"/></pattern></defs>';
+  h+='<rect class="yard" x="276" y="52" width="62" height="66"/>';
+  for(const k in ROOMS){ const r=ROOMS[k], st=state[k]||'plain';
+    const fill=st==='plain'?' fill="var(--paper)"':st==='locked'?' fill="url(#'+tid+')"':'';
+    h+='<rect class="room '+st+'" x="'+r[0]+'" y="'+r[1]+'" width="'+r[2]+'" height="'+r[3]+'"'+fill+'/>';
+    const i=D.locks.findIndex(x=>x.room===k), let_=(S&&i>=0&&S.letters[i])||'';
+    h+='<text class="lbl'+(st==='plain'?' dim':'')+'" x="'+(r[0]+5)+'" y="'+(r[1]+13)+'">'+r[4]+'</text>';
+    if(let_) h+='<text class="let" x="'+(r[0]+r[2]/2)+'" y="'+(r[1]+r[3]-12)+'" text-anchor="middle">'+esc(let_)+'</text>';
+  }
+  h+='<rect class="wall" x="4" y="4" width="262" height="112"/><rect class="wall" x="284" y="60" width="52" height="56"/>';
+  const open=S&&S.done;
+  h+='<rect x="1" y="32" width="6" height="22" fill="var(--paper)"/>';
+  h+=open?'<path class="door open" d="M4 34 L24 34"/><path class="door open" d="M4 54 A20 20 0 0 0 24 34" stroke-dasharray="2 2"/>':'<path class="door" d="M4 34 L4 54" stroke-width="3"/>';
+  h+='</svg>';
+  return h;
+}
+
+/* ---- Estado ---- */
+const KEY='er-'+D.game;
+let S=null;
+function load(){ try{ const r=localStorage.getItem(KEY); if(r) S=JSON.parse(r);}catch(e){} }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const elapsed=()=> S.done ? S.doneAt : Math.floor((Date.now()-S.start)/1000);
+const hintsUsed=()=>Object.keys(S.hints).length;
+const fmt=t=>{const a=Math.abs(t);return (t<0?'+':'')+String(Math.floor(a/60)).padStart(2,'0')+':'+String(a%60).padStart(2,'0');};
+const N=D.locks.length-1;
+
+function tick(){
+  if(!S) return;
+  const left=D.minutes*60-elapsed();
+  $('timer').textContent=fmt(left);
+  $('timer').classList.toggle('late',left<0);
+  if(left<0 && !S.late && !S.done){ S.late=true; save(); showModal('<h2>Tempo esgotado</h2><p style="margin-top:10px">Os '+D.minutes+' minutos acabaram. Continue até o fim para revisar o conteúdo, mas o seu código vai indicar que terminou fora do tempo.</p><button class="primary" type="button" onclick="hideModal()">Continuar a vistoria</button>'); }
+}
+function showModal(h){ $('modalBox').innerHTML=h; $('modal').classList.remove('hidden'); }
+function hideModal(){ $('modal').classList.add('hidden'); }
+
+function renderHud(){
+  const i=Math.min(S.idx,D.locks.length-1), L=D.locks[i];
+  const where=L.type==='final'?'Carimbo final':'Área '+(i+1)+' de '+N;
+  $('step').innerHTML='<b>'+where+'</b>'+(hintsUsed()? hintsUsed()+(hintsUsed()>1?' dicas':' dica')+' (+'+hintsUsed()+' min)':'sem dicas usadas');
+  $('hudPlan').innerHTML=planSVG('h');
+  $('btnHint').disabled=!!S.hints[L.id]||S.done||!!S.solvedView;
+}
+
+/* ---- Área ---- */
+let sel=null, seq=[], pairs={}, activeLeft=null, picks=[];
+function renderLock(){
+  const L=D.locks[S.idx]; sel=null; seq=[]; pairs={}; activeLeft=null; picks=[]; S.solvedView=false;
+  const label=L.type==='final'?'Fechamento do roteiro':'Item '+(S.idx+1)+' do roteiro de inspeção';
+  let h='<article class="sheet" id="sheet"><div class="item">'+label+'</div><h2>'+esc(L.title)+'</h2>';
+  h+='<p class="story">'+esc(L.story)+'</p>';
+  if(L.list){ h+='<ol class="stmts">'+L.list.map(t=>'<li'+(t==='PORQUE'?' class="mid"':'')+'>'+esc(t)+'</li>').join('')+'</ol>'; }
+  if(L.table){ h+='<div class="tw"><table><thead><tr>'+L.table.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+L.table.rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'; }
+  if(L.type==='final'){ h+='<p>Letras coletadas: <b style="letter-spacing:.25em;font-size:20px">'+esc(S.letters.join(' '))+'</b></p>'; }
+  h+='<p class="prompt">'+esc(L.prompt)+'</p><div id="area"></div>';
+  h+='<div id="hintBox">'+(S.hints[L.id]?'<div class="msg hint"><b>Dica:</b> '+esc(L.hint)+'</div>':'')+'</div><div id="fb"></div>';
+  h+='<button class="primary" id="btnGo" type="button" disabled>'+(L.type==='final'?'Carimbar a licença':'Aprovar a área')+'</button></article>';
+  $('game').innerHTML=h;
+  drawArea(); $('btnGo').onclick=submit; renderHud(); window.scrollTo(0,0);
+}
+function drawArea(){
+  const L=D.locks[S.idx], a=$('area'); let h='';
+  if(L.type==='text'||L.type==='final'){
+    h='<input class="answer" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="'+(L.inputmode==='numeric'?'decimal':'text')+'" placeholder="'+esc(L.placeholder||'')+'">';
+    a.innerHTML=h; const i=$('ans');
+    i.oninput=()=>{$('btnGo').disabled=!i.value.trim();};
+    i.onkeydown=e=>{if(e.key==='Enter'&&i.value.trim())submit();};
+    return;
+  }
+  if(L.type==='mc'){
+    h=L.options.map((o,k)=>'<button type="button" class="choice'+(sel===o.id?' sel':'')+'" data-id="'+o.id+'"><span class="n">'+'ABCDE'[k]+'</span><span>'+esc(o.t)+'</span></button>').join('');
+    a.innerHTML=h; a.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{sel=b.dataset.id; drawArea(); $('btnGo').disabled=false;});
+    return;
+  }
+  if(L.type==='multi'){
+    h=L.items.map(o=>{const on=picks.includes(o.id);return '<button type="button" class="choice'+(on?' sel':'')+'" data-id="'+o.id+'" aria-pressed="'+on+'"><span class="box">'+(on?'✕':'')+'</span><span>'+esc(o.t)+'</span></button>';}).join('');
+    h+='<p class="muted" style="font-size:14px;margin:0">'+(picks.length?picks.length+(picks.length>1?' itens marcados':' item marcado')+' como exigência.':'Nenhum item marcado.')+'</p>';
+    a.innerHTML=h; a.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{const id=b.dataset.id,p=picks.indexOf(id); if(p>=0) picks.splice(p,1); else picks.push(id); drawArea();});
+    $('btnGo').disabled=!picks.length; return;
+  }
+  if(L.type==='order'){
+    h='<p class="colhead">Toque para adicionar ao protocolo ou retirar dele. Selecionados: '+seq.length+' de '+L.pick+'</p>'+L.cards.map(c=>{const p=seq.indexOf(c.id);return '<button type="button" class="choice'+(p>=0?' sel':'')+'" data-id="'+c.id+'"'+(p<0&&seq.length>=L.pick?' disabled':'')+'><span class="n">'+(p>=0?(p+1):'')+'</span><span>'+esc(c.t)+'</span></button>';}).join('');
+    h+=seq.length?'<button type="button" class="secondary" id="clr">Limpar sequência</button>':'';
+    a.innerHTML=h;
+    a.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{const id=b.dataset.id,p=seq.indexOf(id); if(p>=0) seq.splice(p,1); else if(seq.length<L.pick) seq.push(id); drawArea();});
+    if($('clr')) $('clr').onclick=()=>{seq=[];drawArea();};
+    $('btnGo').disabled=seq.length!==L.pick; return;
+  }
+  if(L.type==='assoc'){
+    const used=Object.values(pairs);
+    h='<p class="colhead">1. Escolha o item</p>'+L.left.map((t,k)=>{const r=L.right.find(x=>x.id===pairs[k]);return '<button type="button" class="choice'+(activeLeft===k?' sel':'')+'" data-l="'+k+'"><span><b>'+esc(t)+'</b>'+(r?'<span class="pair-target">→ '+esc(r.t)+'</span>':'')+'</span></button>';}).join('');
+    h+='<p class="colhead" id="rhead">2. Toque no destino'+(activeLeft!==null?' de: <b>'+esc(L.left[activeLeft])+'</b>':'')+'</p>'+L.right.map(r=>'<button type="button" class="choice'+(used.includes(r.id)?' used':'')+'" data-r="'+r.id+'"'+(activeLeft===null?' disabled':'')+'><span>'+esc(r.t)+'</span></button>').join('');
+    a.innerHTML=h;
+    a.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{activeLeft=+b.dataset.l; drawArea(); const t=$('rhead'); if(t) t.scrollIntoView({block:'start',behavior:'smooth'}); });
+    a.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ if(activeLeft===null) return; const id=b.dataset.r;
+      for(const k in pairs) if(pairs[k]===id) delete pairs[k];
+      pairs[activeLeft]=id; const nx=L.left.findIndex((_,k)=>pairs[k]===undefined); activeLeft=nx>=0?nx:null; drawArea(); });
+    $('btnGo').disabled=Object.keys(pairs).length!==L.left.length; return;
+  }
+}
+function currentAnswer(){
+  const L=D.locks[S.idx];
+  if(L.type==='text'||L.type==='final') return norm($('ans').value);
+  if(L.type==='mc') return sel;
+  if(L.type==='multi') return picks.slice().sort().join('-');
+  if(L.type==='order') return seq.join('-');
+  if(L.type==='assoc') return L.left.map((_,k)=>pairs[k]).join('-');
+}
+function submit(){
+  const L=D.locks[S.idx], ans=currentAnswer(); if(!ans) return;
+  const btn=$('btnGo'), lbl=btn.textContent; btn.disabled=true; btn.textContent='Conferindo…';
+  setTimeout(()=>{
+    let hit=null;
+    for(const alt of L.alts){ if(slow(L.id,ans)===alt.c){ hit=alt; break; } }
+    btn.textContent=lbl;
+    if(hit){ solved(L,ans,hit); return; }
+    S.errors++; save();
+    let extra='';
+    if(L.parts){ const parts=ans.split('-'); let c=0; parts.forEach((p,k)=>{ if(k<L.parts.length && sha(D.salt+L.id+'p'+k+':'+p)===L.parts[k]) c++; });
+      extra='<b>'+c+' de '+L.parts.length+(L.type==='order'?' na posição certa.':' corretos.')+'</b> '; }
+    $('fb').innerHTML='<div class="msg err"><b>Não conforme.</b> '+extra+esc(L.feedback)+'</div>';
+    const sh=$('sheet'); sh.classList.remove('shake'); void sh.offsetWidth; sh.classList.add('shake');
+    btn.disabled=false; $('fb').scrollIntoView({block:'nearest',behavior:'smooth'});
+  },30);
+}
+function solved(L,ans,alt){
+  const r=dec(L.id,ans,alt.s);
+  S.answers[L.id]=1; if(r.l) S.letters[S.idx]=r.l;
+  const last=S.idx===D.locks.length-1;
+  if(last){ S.done=true; S.doneAt=Math.floor((Date.now()-S.start)/1000); S.finalText=r.u; save(); finish(); return; }
+  S.idx++; save(); S.solvedView=true;
+  $('game').innerHTML='<article class="sheet"><div class="item">Item '+S.idx+' do roteiro de inspeção</div><h2>'+esc(L.title)+'</h2><div class="stamp" role="status">'+(r.l?'<span class="l">'+esc(r.l)+'</span>':'')+'Conforme</div><div class="msg ok">'+esc(r.u)+'</div><button class="primary" id="btnNext" type="button">'+(S.idx===N?'Ir para o carimbo da licença':'Seguir para a área '+(S.idx+1))+'</button></article>';
+  $('btnNext').onclick=renderLock; renderHud(); window.scrollTo(0,0);
+}
+
+/* ---- Código de verificação ---- */
+const ALPH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function makeCode(name,t,hints,errs,late){
+  const nn=norm(name);
+  const p=(Math.min(t,4095)*512)+(Math.min(hints,7)*64)+(Math.min(errs,31)*2)+(late?1:0);
+  const mask=parseInt(sha(D.secret+'m'+nn).slice(0,6),16)%2097152;
+  const mac=parseInt(sha(D.secret+'c'+nn+':'+p).slice(0,5),16)%524288;
+  let v=(p^mask)*524288+mac, s='';
+  for(let i=0;i<8;i++){ s=ALPH[v%32]+s; v=Math.floor(v/32); }
+  return s;
+}
+function finish(){
+  $('game').classList.add('hidden'); $('hud').classList.add('hidden');
+  const hints=hintsUsed(), total=S.doneAt+hints*60, late=S.doneAt>D.minutes*60;
+  const code=makeCode(S.name,total,hints,S.errors,late);
+  $('end').innerHTML='<h1>'+(late?'Licença concedida, fora do tempo':'Licença concedida!')+'</h1>'+planSVG('e')+
+   '<p class="story">'+esc(S.finalText||'')+'</p>'+
+   '<dl class="stats"><dt>Nome</dt><dd>'+esc(S.name)+'</dd><dt>Tempo final (com dicas)</dt><dd>'+fmt(total)+'</dd><dt>Dicas usadas</dt><dd>'+hints+'</dd><dt>Erros</dt><dd>'+S.errors+'</dd></dl>'+
+   '<p style="margin-top:18px;font-weight:650">Seu código de verificação</p><div class="code" id="code">'+code+'</div>'+
+   '<p class="muted" style="font-size:14px">Envie ao professor o seu nome exatamente como digitou e este código. Uma foto desta tela também serve.</p>'+
+   '<button class="primary" type="button" id="btnCopy">Copiar nome e código</button>'+
+   '<button class="secondary" type="button" id="btnReset">Jogar de novo (apaga este resultado)</button>';
+  $('end').classList.remove('hidden'); window.scrollTo(0,0);
+  $('btnCopy').onclick=()=>{ const txt=S.name+';'+code;
+    const ok=()=>{$('btnCopy').textContent='Copiado';};
+    if(navigator.clipboard) navigator.clipboard.writeText(txt).then(ok,()=>prompt('Copie:',txt)); else prompt('Copie:',txt); };
+  $('btnReset').onclick=()=>{ showModal('<h2>Apagar resultado?</h2><p style="margin-top:10px">O código atual deixa de aparecer neste celular. Anote ou envie antes.</p><button class="primary" type="button" id="yes">Apagar e recomeçar</button><button class="secondary" type="button" onclick="hideModal()">Cancelar</button>');
+    $('yes').onclick=()=>{ try{localStorage.removeItem(KEY);}catch(e){} location.reload(); }; };
+}
+
+/* ---- Início ---- */
+$('introPlan').innerHTML=planSVG('i');
+$('name').oninput=()=>{ $('btnStart').disabled=$('name').value.trim().split(/\s+/).filter(Boolean).length<2; };
+$('btnStart').onclick=()=>{
+  S={name:$('name').value.trim().replace(/\s+/g,' '),start:Date.now(),idx:0,answers:{},letters:[],hints:{},errors:0,late:false,done:false};
+  save(); begin();
+};
+$('btnHint').onclick=()=>{
+  const L=D.locks[S.idx]; if(S.hints[L.id]) return;
+  showModal('<h2>Usar a dica?</h2><p style="margin-top:10px">A dica soma 1 minuto ao seu tempo final.</p><button class="primary" type="button" id="yesHint">Mostrar dica</button><button class="secondary" type="button" onclick="hideModal()">Agora não</button>');
+  $('yesHint').onclick=()=>{ S.hints[L.id]=1; save(); hideModal(); $('hintBox').innerHTML='<div class="msg hint"><b>Dica:</b> '+esc(L.hint)+'</div>'; renderHud(); };
+};
+function begin(){
+  $('intro').classList.add('hidden');
+  if(S.done){ finish(); return; }
+  $('hud').classList.remove('hidden'); $('game').classList.remove('hidden');
+  renderLock(); tick(); setInterval(tick,1000);
+}
+load(); if(S) begin();
+</script>
+</body>
+</html>
